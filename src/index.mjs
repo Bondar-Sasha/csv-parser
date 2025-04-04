@@ -1,25 +1,70 @@
-import XLSX from 'xlsx'
+import consoleArgs from './argv.mjs'
+import readline from 'readline'
 import fs from 'fs'
+import path from 'path'
 
-// 1. Создаем данные для CSV
-const data = [
-  ["Name", "Age", "Email", "Position"],
-  ["John Doe", 32, "john@example.com", "Developer"],
-  ["Jane Smith", 28, "jane@example.com", "Designer"],
-  ["Bob Johnson", 45, "bob@example.com", "Manager"]
-];
+const inputFilePath = path.normalize(consoleArgs.sourceFile)
+const outputFilePath = consoleArgs.resultFile
+  ? path.normalize(consoleArgs.resultFile)
+  : inputFilePath.replace('.csv', '.json')
 
-// 2. Создаем рабочую книгу и лист
-const workbook = XLSX.utils.book_new();
-const worksheet = XLSX.utils.aoa_to_sheet(data);
+const separator = consoleArgs.separator || ','
 
-// 3. Добавляем лист в книгу
-XLSX.utils.book_append_sheet(workbook, worksheet, "Employees");
+const writableStream = fs.createWriteStream(
+  outputFilePath.endsWith('.json') ? outputFilePath : outputFilePath + '.json'
+)
 
-// 4. Генерируем CSV (вместо Excel)
-const csvOutput = XLSX.utils.sheet_to_csv(worksheet);
+writableStream.write('[\n')
 
-// 5. Сохраняем в файл
-fs.writeFileSync('employees.csv', csvOutput);
+const stream = fs.createReadStream(inputFilePath)
+let headers = null
+let lineNum = 0
+let firstEntry = true
 
-console.log('CSV файл успешно создан: employees.csv');
+const rl = readline.createInterface({
+  input: stream,
+  crlfDelay: Infinity,
+})
+
+rl.on('line', (line) => {
+  lineNum++
+
+  if (!line.trim()) return
+
+  if (lineNum === 1) {
+    headers = line.split(separator)
+    return
+  }
+
+  const values = line.split(separator)
+  const result = {}
+
+  headers.forEach((header, index) => {
+    result[header] = values[index]?.trim() || ''
+  })
+
+  const jsonEntry = JSON.stringify(result, null, 2)
+
+  if (!firstEntry) writableStream.write(',\n')
+  firstEntry = false
+
+  writableStream.write(jsonEntry)
+})
+
+rl.on('close', () => {
+  writableStream.write('\n]\n')
+  writableStream.end()
+})
+
+rl.on('error', (err) => {
+  console.error('Parsing error:', err)
+  writableStream.destroy()
+})
+
+writableStream.on('error', (err) => {
+  console.error('File writing error:', err)
+})
+
+writableStream.on('finish', () => {
+  console.log('Done')
+})
