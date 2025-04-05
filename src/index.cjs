@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-const path = require('path')
-const fs = require('fs')
-const {Transform} = require('stream')
+const path = require('node:path')
+const fs = require('node:fs')
+const {Transform} = require('node:stream')
 
 const consoleArgs = require('./argv.cjs')
 const logMemoryUsage = require('./memory.cjs')
