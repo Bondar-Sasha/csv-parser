@@ -5,7 +5,7 @@ export default defineConfig({
   outDir: 'dist',
   build: {
     rollupOptions: {
-      input: path.resolve(__dirname, 'src/index.js'),
+      input: path.resolve(__dirname, 'src/index.mjs'),
       output: {
         entryFileNames: 'index.mjs',
       },
