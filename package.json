@@ -1,7 +1,7 @@
 {
   "name": "cvs-parser",
   "version": "1.0.0",
-  "description": "app for parsing excel files",
+  "description": "app for parsing csv files",
   "main": "./dist/index.js",
   "files": [
     "dist"
