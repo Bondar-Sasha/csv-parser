@@ -1,10 +1,10 @@
-import path from 'path'
-import fs from 'fs'
-import {Transform} from 'stream'
+const path = require('path')
+const fs = require('fs')
+const {Transform} = require('stream')
 
-import consoleArgs from './argv.mjs'
-import logMemoryUsage from './memory.mjs'
-import generateCSV from './generateFile.mjs'
+const consoleArgs = require('./argv.cjs')
+const logMemoryUsage = require('./memory.cjs')
+const generateCSV = require('./generateFile.cjs')
 
 const MEMORY = 20 * 1024 * 1024
 
