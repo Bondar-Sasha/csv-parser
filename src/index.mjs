@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
-const path = require('node:path')
-const fs = require('node:fs')
-const {Transform} = require('node:stream')
+import path from 'node:path'
+import fs from 'node:fs'
+import {Transform} from 'node:stream'
 
-const consoleArgs = require('./argv.cjs')
-const logMemoryUsage = require('./memory.cjs')
-const generateCSV = require('./generateFile.cjs')
+import consoleArgs from './argv.mjs'
+import logMemoryUsage from './memory.mjs'
+import generateCSV from './generateFile.mjs'
 
 const MEMORY = 20 * 1024 * 1024
 
