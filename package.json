@@ -1,17 +1,20 @@
 {
   "name": "my-custom-csv-parser",
-  "version": "1.0.0",
-  "description": "app for parsing csv files",
-  "main": "./dist/index.js",
+  "version": "1.0.1",
+  "description": "App for parsing CSV files",
+  "main": "./dist/index.cjs",
   "files": [
     "dist"
   ],
+  "bin": {
+    "my-custom-csv-parser": "./dist/index.cjs"
+  },
   "scripts": {
     "build": "vite build",
-    "lint": "eslint"
+    "lint": "eslint ."
   },
   "keywords": [],
-  "author": "",
+  "author": "Alex",
   "license": "ISC",
   "devDependencies": {
     "@eslint/js": "^9.23.0",
