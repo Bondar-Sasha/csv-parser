@@ -7,7 +7,7 @@ export default defineConfig({
     rollupOptions: {
       input: path.resolve(__dirname, 'src/index.cjs'),
       output: {
-        entryFileNames: 'index.cjs',
+        entryFileNames: 'index.mjs',
       },
     },
   },

@@ -1,6 +1,6 @@
 {
   "name": "my-custom-csv-parser",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "App for parsing CSV files",
   "main": "./dist/index.cjs",
   "files": [
