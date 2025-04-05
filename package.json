@@ -2,12 +2,12 @@
   "name": "my-custom-csv-parser",
   "version": "1.0.4",
   "description": "App for parsing CSV files",
-  "main": "./dist/index.cjs",
+  "main": "./dist/index.mjs",
   "files": [
     "dist"
   ],
   "bin": {
-    "my-custom-csv-parser": "./dist/index.cjs"
+    "my-custom-csv-parser": "./dist/index.mjs"
   },
   "scripts": {
     "build": "vite build",
