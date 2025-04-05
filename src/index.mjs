@@ -1,70 +1,96 @@
-import consoleArgs from './argv.mjs'
-import readline from 'readline'
-import fs from 'fs'
 import path from 'path'
+import fs from 'fs'
+import {Transform} from 'stream'
 
-const inputFilePath = path.normalize(consoleArgs.sourceFile)
-const outputFilePath = consoleArgs.resultFile
-  ? path.normalize(consoleArgs.resultFile)
-  : inputFilePath.replace('.csv', '.json')
+import consoleArgs from './argv.mjs'
+import logMemoryUsage from './memory.mjs'
+import generateCSV from './generateFile.mjs'
 
-const separator = consoleArgs.separator || ','
+const MEMORY = 20 * 1024 * 1024
 
-const writableStream = fs.createWriteStream(
-  outputFilePath.endsWith('.json') ? outputFilePath : outputFilePath + '.json'
-)
+const memoryLogInterval = setInterval(() => {
+  logMemoryUsage()
+}, 5000)
 
-writableStream.write('[\n')
+if (consoleArgs.generateFile) {
+  generateCSV(consoleArgs.generateFile)
+    .then((stream) => {
+      console.log(`Done. Result saved to ${stream.path}`)
+      process.exit(0)
+    })
+    .catch((err) => {
+      console.error('Error generating:', err)
+      process.exit(1)
+    })
+}
+if (!consoleArgs.generateFile) {
+  const separator = consoleArgs.separator || ','
+  const inputFilePath = path.normalize(consoleArgs.sourceFile)
+  const outputFilePath = consoleArgs.resultFile
+    ? path.normalize(consoleArgs.resultFile)
+    : inputFilePath.replace(/\.csv$/, '.json')
 
-const stream = fs.createReadStream(inputFilePath)
-let headers = null
-let lineNum = 0
-let firstEntry = true
+  const writableStream = fs.createWriteStream(
+    outputFilePath.endsWith('.json')
+      ? outputFilePath
+      : `${outputFilePath}.json`,
+    {autoClose: true, highWaterMark: MEMORY}
+  )
 
-const rl = readline.createInterface({
-  input: stream,
-  crlfDelay: Infinity,
-})
+  const transformStream = new Transform({
+    highWaterMark: MEMORY,
+    transform(chunk, encoding, callback) {
+      const data = chunk.toString().replace(/\r/g, '')
+      const lines = data.split('\n')
 
-rl.on('line', (line) => {
-  lineNum++
+      if (!this.headers) {
+        this.headers = lines[0].split(separator)
+        this.push('[\n')
+        lines.shift()
+      }
+      if (lines.length === 0) {
+        callback()
+      }
 
-  if (!line.trim()) return
+      if (this.isFirstChunk === undefined) {
+        this.isFirstChunk = false
+      } else {
+        this.push(',\n')
+      }
 
-  if (lineNum === 1) {
-    headers = line.split(separator)
-    return
-  }
+      const jsonEntries = lines.map((line) => {
+        const values = line.split(separator)
+        return this.headers.reduce((acc, header, idx) => {
+          acc[header] = values[idx]
+          return acc
+        }, {})
+      })
 
-  const values = line.split(separator)
-  const result = {}
+      const jsonString = jsonEntries
+        .map((entry) => JSON.stringify(entry, null, 2))
+        .join(',\n')
 
-  headers.forEach((header, index) => {
-    result[header] = values[index]?.trim() || ''
+      this.push(jsonString)
+      callback()
+    },
+    flush(callback) {
+      this.push('\n]\n')
+      callback()
+    },
   })
 
-  const jsonEntry = JSON.stringify(result, null, 2)
-
-  if (!firstEntry) writableStream.write(',\n')
-  firstEntry = false
-
-  writableStream.write(jsonEntry)
-})
-
-rl.on('close', () => {
-  writableStream.write('\n]\n')
-  writableStream.end()
-})
-
-rl.on('error', (err) => {
-  console.error('Parsing error:', err)
-  writableStream.destroy()
-})
-
-writableStream.on('error', (err) => {
-  console.error('File writing error:', err)
-})
-
-writableStream.on('finish', () => {
-  console.log('Done')
-})
+  fs.createReadStream(inputFilePath, {
+    autoClose: true,
+    highWaterMark: MEMORY,
+  })
+    .pipe(transformStream)
+    .pipe(writableStream)
+    .on('error', (err) => {
+      console.error(err)
+    })
+    .on('finish', () => {
+      clearInterval(memoryLogInterval)
+      console.log(`Done. Result saved to ${outputFilePath}`)
+      process.exit()
+    })
+}
