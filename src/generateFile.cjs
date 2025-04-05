@@ -1,8 +1,7 @@
-import fs from 'fs'
-import path from 'path'
-import {fileURLToPath} from 'url'
+const fs = require('fs')
+const path = require('path')
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const __dirname = process.cwd()
 
 async function generateCSV(filePath) {
   const fullPath = path.join(__dirname, '..', path.normalize(filePath))
@@ -27,4 +26,5 @@ async function generateCSV(filePath) {
     stream.end()
   })
 }
-export default generateCSV
+
+module.exports = generateCSV
