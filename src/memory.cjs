@@ -3,4 +3,4 @@ function logMemoryUsage() {
   console.log(`Memory for app: ${memoryUsage.rss / 1024 / 1024} MB`)
 }
 
-export default logMemoryUsage
+module.exports = logMemoryUsage

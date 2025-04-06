@@ -1,11 +1,8 @@
-import fs from 'node:fs'
-import path from 'node:path'
-
-const __dirname = process.cwd()
+const fs = require('node:fs')
+const path = require('node:path')
 
 async function generateCSV(filePath) {
-  const fullPath = path.join(__dirname, '..', path.normalize(filePath))
-  const stream = fs.createWriteStream(fullPath, {
+  const stream = fs.createWriteStream(path.normalize(filePath), {
     highWaterMark: 20 * 1024 * 1024,
   })
 
@@ -27,4 +24,4 @@ async function generateCSV(filePath) {
   })
 }
 
-export default generateCSV
+module.exports = generateCSV
