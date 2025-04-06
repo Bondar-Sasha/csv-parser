@@ -1,6 +1,8 @@
-const path = require('path')
-const fs = require('fs')
-const {Transform} = require('stream')
+#!/usr/bin/env node
+
+const path = require('node:path')
+const fs = require('node:fs')
+const streams = require('node:stream')
 
 const consoleArgs = require('./argv.cjs')
 const logMemoryUsage = require('./memory.cjs')
@@ -22,8 +24,7 @@ if (consoleArgs.generateFile) {
       console.error('Error generating:', err)
       process.exit(1)
     })
-}
-if (!consoleArgs.generateFile) {
+} else {
   const separator = consoleArgs.separator || ','
   const inputFilePath = path.normalize(consoleArgs.sourceFile)
   const outputFilePath = consoleArgs.resultFile
@@ -37,7 +38,7 @@ if (!consoleArgs.generateFile) {
     {autoClose: true, highWaterMark: MEMORY}
   )
 
-  const transformStream = new Transform({
+  const transformStream = new streams.Transform({
     highWaterMark: MEMORY,
     transform(chunk, encoding, callback) {
       const data = chunk.toString().replace(/\r/g, '')
@@ -58,19 +59,19 @@ if (!consoleArgs.generateFile) {
         this.push(',\n')
       }
 
-      const jsonEntries = lines.map((line) => {
-        const values = line.split(separator)
-        return this.headers.reduce((acc, header, idx) => {
-          acc[header] = values[idx]
-          return acc
-        }, {})
-      })
-
-      const jsonString = jsonEntries
+      const jsonString = lines
+        .map((line) =>
+          Object.fromEntries(
+            line
+              .split(separator)
+              .map((value, idx) => [this.headers[idx], value])
+          )
+        )
         .map((entry) => JSON.stringify(entry, null, 2))
         .join(',\n')
 
       this.push(jsonString)
+
       callback()
     },
     flush(callback) {
