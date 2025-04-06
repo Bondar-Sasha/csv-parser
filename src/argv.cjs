@@ -1,4 +1,4 @@
-import {Command} from 'commander'
+const {Command} = require('commander')
 
 const program = new Command()
 
@@ -15,4 +15,4 @@ if (!consoleArgs.generateFile && !consoleArgs.sourceFile) {
   process.exit(1)
 }
 
-export default consoleArgs
+module.exports = consoleArgs
