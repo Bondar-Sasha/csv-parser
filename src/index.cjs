@@ -37,7 +37,6 @@ if (consoleArgs.generateFile) {
       : `${outputFilePath}.json`,
     {autoClose: true, highWaterMark: MEMORY}
   )
-
   const transformStream = new streams.Transform({
     highWaterMark: MEMORY,
     transform(chunk, encoding, callback) {
@@ -60,14 +59,17 @@ if (consoleArgs.generateFile) {
       }
 
       const jsonString = lines
-        .map((line) =>
-          Object.fromEntries(
-            line
-              .split(separator)
-              .map((value, idx) => [this.headers[idx], value])
+        .map((line) => {
+          const values = line.split(separator)
+          return (
+            '{' +
+            this.headers.map((header, index) => {
+              const value = values[index] || ''
+              return `"${header}": "${value}"`
+            }) +
+            '}'
           )
-        )
-        .map((entry) => JSON.stringify(entry, null, 2))
+        })
         .join(',\n')
 
       this.push(jsonString)
